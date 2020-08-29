@@ -14,23 +14,35 @@ namespace ExRam.Gremlinq.Providers.CosmosDb.Tests
                 GremlinQuerySource.g
                     .ConfigureEnvironment(env => env
                         .UseCosmosDb(builder => builder
-                            .At(new Uri("wss://localhost"), "database", "graph")
-                            .AuthenticateBy("authKey"))), testOutputHelper)
+                            .At(new Uri("https://localhost:8081"), "Issue103", "Default")
+                            .AuthenticateBy(
+                                "authKey")
+                            .ConfigureWebSocket(builder => builder
+                                .At(new Uri("ws://localhost:8901")))))
+                , testOutputHelper)
         {
         }
 
         [Fact]
         public async Task GuidDeserialization_Succeeds()
         {
-            await _g
+            var g = GremlinQuerySource.g
+                .ConfigureEnvironment(env => env
+                    .UseCosmosDb(builder => builder
+                        .At(new Uri("https://localhost:8081"), "Issue103", "Default")
+                        .AuthenticateBy(
+                            "authKey")
+                        .ConfigureWebSocket(builder => builder
+                            .At(new Uri("ws://localhost:8901")))));
+
+            await g
                 .AddV(new VertexWithGuid
                 {
                     Id = Guid.NewGuid(),
                     Label = "Test",
                     TestGuidProperty = new Guid("d74f367c15da423ca5c1f08ad4ab42fd")
-                });
-
-            await Verify(this);
+                })
+                .FirstOrDefaultAsync();
         }
     }
 }
